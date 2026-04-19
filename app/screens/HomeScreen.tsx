@@ -1,4 +1,5 @@
 import * as NavigationBar from 'expo-navigation-bar';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import {
@@ -24,7 +25,6 @@ export default function HomeScreen({ navigation }: any) {
     const { width, height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
-    // 🧠 hooks limpios
     const { petData, loading } = usePet();
     const { feed, sleep, clean } = usePetActions();
     const floatAnim = useFloatingAnimation();
@@ -33,6 +33,16 @@ export default function HomeScreen({ navigation }: any) {
         NavigationBar.setVisibilityAsync("hidden");
         NavigationBar.setBehaviorAsync("inset-touch");
         playMusic();
+
+        // ✅ Bloquear en horizontal al entrar
+        ScreenOrientation.lockAsync(
+            ScreenOrientation.OrientationLock.LANDSCAPE_LEFT
+        ).catch((e) => console.log("Error locking orientation:", e));
+
+        return () => {
+            // ✅ Desbloquear al salir de HomeScreen
+            ScreenOrientation.unlockAsync();
+        };
     }, []);
 
     if (loading) {
@@ -124,7 +134,6 @@ export default function HomeScreen({ navigation }: any) {
                     <ProgressBar icon="🍖" color="#FF5252" progress={(petData?.hunger || 0) / 100} />
                     <ProgressBar icon="⚡" color="#FFD600" progress={(petData?.energy || 0) / 100} />
                     <ProgressBar icon="🧼" color="#40C4FF" progress={(petData?.cleanliness || 0) / 100} />
-
                 </View>
 
                 {/* ACCIONES */}
@@ -166,8 +175,6 @@ export default function HomeScreen({ navigation }: any) {
         </View>
     );
 }
-
-// --- ESTILOS ---
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#001A33' },

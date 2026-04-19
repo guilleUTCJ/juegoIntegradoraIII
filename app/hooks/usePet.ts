@@ -10,7 +10,7 @@ export const usePet = () => {
 
     const loadPet = async () => {
         try {
-            const data = await petService.getPetData();
+            const data = await petService.getPetData(); // 👈 aquí ocurre la degradación
             setPetData(data);
         } catch (error) {
             console.log("Error loading pet:", error);
@@ -37,6 +37,12 @@ export const usePet = () => {
 
     useEffect(() => {
         loadPet();
+
+        const interval = setInterval(() => {
+            loadPet(); // ⏳ baja stats en tiempo real
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, []);
 
     return { petData, loading, updateStat };

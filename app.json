@@ -16,7 +16,9 @@
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./app/assets/images/icon.jpg",
         "backgroundImage": "./app/assets/images/icon.jpg",
-        "monochromeImage": "./app/assets/images/icon.jpg"
+        "monochromeImage": "./app/assets/images/icon.jpg",
+        "softwareKeyboardLayoutMode": "pan",
+        "screenOrientation": "landscape"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false

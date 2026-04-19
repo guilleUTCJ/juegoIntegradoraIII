@@ -11,52 +11,64 @@ import StartScreen from "./app/screens/StartScreen";
 
 // Importamos las nuevas pantallas desarrolladas
 import BattleScreen from "./app/screens/BattleScreen";
+import BattleScreenScenario from "./app/screens/BattleScreenScenario";
 import PetScreen from "./app/screens/PetScreen";
-
+import ShopScreen from "./app/screens/ShopScreen";
 const Stack = createNativeStackNavigator();
 
-export default function App(){
+export default function App() {
 
-  return(
+  return (
     <AudioProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
 
-          <Stack.Screen 
-            name="Splash" 
-            component={SplashScreen} 
+          <Stack.Screen
+            name="Splash"
+            component={SplashScreen}
           />
-    
-          <Stack.Screen 
-            name="Start" 
-            component={StartScreen} 
+
+          <Stack.Screen
+            name="Start"
+            component={StartScreen}
+          />
+
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+          />
+
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
           />
 
           <Stack.Screen 
-            name="Login" 
-            component={LoginScreen} 
-          />
-
-          <Stack.Screen 
-            name="Home" 
-            component={HomeScreen} 
+          name="ShopScreen" 
+          component={ShopScreen} 
           />
 
           {/* Nueva ruta para el cuidado de la mascota */}
-          <Stack.Screen 
-            name="Pet" 
-            component={PetScreen} 
+          <Stack.Screen
+            name="Pet"
+            component={PetScreen}
           />
 
           {/* Nueva ruta para el combate PvP */}
-          <Stack.Screen 
-            name="BattleScreen" 
-            component={BattleScreen} 
+          <Stack.Screen
+            name="BattleScreen"
+            component={BattleScreen}
           />
 
-          <Stack.Screen 
-            name="Profile" 
-            component={ProfileScreen} 
+          <Stack.Screen
+            name="BattleScreenScenario"
+            component={BattleScreenScenario}
+          />
+
+
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
           />
 
         </Stack.Navigator>
