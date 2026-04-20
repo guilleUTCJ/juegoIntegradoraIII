@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
+  Dimensions,
+  FlatList,
   ImageBackground,
   Pressable,
   StyleSheet,
@@ -9,147 +12,195 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { petService } from "../services/petService";
 
+const { width } = Dimensions.get("window");
+
+const SHOP_ITEMS = [
+  { id: '1', emoji: "🍎", title: "MANZANA", price: 50, category: "food", key: "apple" },
+  { id: '2', emoji: "🍗", title: "CARNE", price: 150, category: "food", key: "meat" },
+  { id: '3', emoji: "🛏", title: "CAMA", price: 500, category: "rest", key: "bed" },
+  { id: '4', emoji: "🧼", title: "JABÓN", price: 80, category: "clean", key: "soap" },
+];
+
 export default function ShopScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const [gold, setGold] = useState(0);
+  // Estado para controlar las cantidades de cada item por su ID
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>(
+    SHOP_ITEMS.reduce((acc, item) => ({ ...acc, [item.id]: 1 }), {})
+  );
 
-  const buyItem = async (type: string) => {
-    if (type === "food") {
-      await petService.updatePetStats({ hunger: 100 });
-    }
-    if (type === "bed") {
-      await petService.updatePetStats({ energy: 100 });
-    }
-    if (type === "bath") {
-      await petService.updatePetStats({ cleanliness: 100 });
-    }
+  useEffect(() => {
+    loadGold();
+  }, []);
+
+  const loadGold = async () => {
+    const data = await petService.getPetData();
+    if (data) setGold(data.gold);
   };
 
-  const Item = ({ emoji, title, desc, onPress }: any) => (
-    <Pressable style={styles.item} onPress={onPress}>
-      <Text style={styles.emoji}>{emoji}</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.desc}>{desc}</Text>
-      <View style={styles.button}>
-        <Text style={styles.buttonText}>COMPRAR</Text>
+  const updateQuantity = (id: string, delta: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [id]: Math.max(1, (prev[id] || 1) + delta)
+    }));
+  };
+
+  const buyItem = async (item: typeof SHOP_ITEMS[0]) => {
+    const qty = quantities[item.id] || 1;
+    const totalCost = item.price * qty;
+
+    if (gold < totalCost) {
+      Alert.alert("Oro insuficiente", `Necesitas 💰 ${totalCost} para comprar ${qty} unidades.`);
+      return;
+    }
+
+    const newGold = gold - totalCost;
+    // Actualizar en Firebase
+    await petService.updatePetStats({ gold: newGold });
+    await petService.addItem(item.category, item.key, qty);
+    
+    setGold(newGold);
+    // Reiniciar contador a 1 tras la compra
+    setQuantities(prev => ({ ...prev, [item.id]: 1 }));
+    
+    Alert.alert("¡Compra exitosa!", `Añadido: ${qty}x ${item.title}`);
+  };
+
+  const renderShopItem = ({ item }: { item: typeof SHOP_ITEMS[0] }) => {
+    const currentQty = quantities[item.id] || 1;
+
+    return (
+      <View style={styles.card}>
+        <Text style={styles.emoji}>{item.emoji}</Text>
+        <Text style={styles.itemTitle}>{item.title}</Text>
+        <Text style={styles.priceText}>💰 {item.price} c/u</Text>
+
+        {/* SELECTOR DE CANTIDAD */}
+        <View style={styles.quantityContainer}>
+          <Pressable 
+            style={styles.qtyBtn} 
+            onPress={() => updateQuantity(item.id, -1)}
+          >
+            <Text style={styles.qtyBtnText}>-</Text>
+          </Pressable>
+          
+          <Text style={styles.qtyNumber}>{currentQty}</Text>
+          
+          <Pressable 
+            style={styles.qtyBtn} 
+            onPress={() => updateQuantity(item.id, 1)}
+          >
+            <Text style={styles.qtyBtnText}>+</Text>
+          </Pressable>
+        </View>
+
+        <Pressable 
+          style={[styles.buyButton, gold < (item.price * currentQty) && styles.buyDisabled]} 
+          onPress={() => buyItem(item)}
+        >
+          <Text style={styles.buyButtonText}>
+            PAGAR 💰 {item.price * currentQty}
+          </Text>
+        </Pressable>
       </View>
-    </Pressable>
-  );
+    );
+  };
 
   return (
     <ImageBackground
       source={require("../assets/images/background_lobby.png")}
       style={styles.container}
-      imageStyle={{ opacity: 0.9 }}
     >
-      <View style={[styles.header, { marginTop: insets.top }]}>
-        <Text style={styles.headerText}>🛒 TIENDA</Text>
-
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>⬅ VOLVER</Text>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}> 
+        <View>
+          <Text style={styles.headerTitle}>🛒 TIENDA</Text>
+          <Text style={styles.goldStatus}>DISPONIBLE: 💰 {gold}</Text>
+        </View>
+        
+        <Pressable 
+          style={styles.inventoryBtn} 
+          onPress={() => navigation.navigate("InventoryScreen")}
+        >
+          <Text style={styles.inventoryBtnText}>🎒 VER MOCHILA</Text>
         </Pressable>
       </View>
 
-      <View style={styles.grid}>
-        <Item
-          emoji="🍖"
-          title="COMIDA"
-          desc="+100 HAMBRE"
-          onPress={() => buyItem("food")}
-        />
-
-        <Item
-          emoji="🛏"
-          title="CAMA"
-          desc="+100 ENERGÍA"
-          onPress={() => buyItem("bed")}
-        />
-
-        <Item
-          emoji="🚿"
-          title="BAÑO"
-          desc="+100 LIMPIEZA"
-          onPress={() => buyItem("bath")}
-        />
-      </View>
+      <FlatList
+        data={SHOP_ITEMS}
+        renderItem={renderShopItem}
+        keyExtractor={(item) => item.id}
+        numColumns={4}
+        contentContainerStyle={styles.scrollContainer}
+        columnWrapperStyle={styles.row}
+      />
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20
-  },
-
-  headerText: {
-    fontSize: 28,
-    color: "#FFF",
-    fontFamily: "monospace",
-    letterSpacing: 2
-  },
-
-  back: {
-    color: "#FFD600",
-    fontSize: 16,
-    fontFamily: "monospace"
-  },
-
-  grid: {
-    flex: 1,
-    justifyContent: "center",
-    gap: 20
-  },
-
-  item: {
-    backgroundColor: "#1B1B1B",
-    borderWidth: 4,
-    borderColor: "#000",
-    padding: 20,
-    borderRadius: 10,
+  container: { flex: 1 },
+  header: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8
+    paddingHorizontal: 30,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingBottom: 15
   },
-
-  emoji: {
-    fontSize: 40,
-    marginBottom: 10
-  },
-
-  title: {
-    fontSize: 18,
-    color: "#FFF",
-    fontFamily: "monospace"
-  },
-
-  desc: {
-    fontSize: 12,
-    color: "#AAA",
-    marginBottom: 10,
-    fontFamily: "monospace"
-  },
-
-  button: {
-    backgroundColor: "#FF3D00",
+  headerTitle: { fontSize: 22, fontWeight: "900", color: "#FFF" },
+  goldStatus: { color: "#FFD600", fontWeight: "bold", fontSize: 16 },
+  inventoryBtn: {
+    backgroundColor: "#FFD600",
+    paddingHorizontal: 15,
     paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderWidth: 3,
-    borderColor: "#000"
+    borderRadius: 20,
   },
-
-  buttonText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontFamily: "monospace",
-    letterSpacing: 1
-  }
+  inventoryBtnText: { color: "#000", fontWeight: "bold", fontSize: 12 },
+  scrollContainer: { padding: 15 },
+  row: { justifyContent: "center" },
+  card: {
+    backgroundColor: "rgba(30, 30, 30, 0.95)",
+    width: (width / 4) - 30,
+    margin: 8,
+    padding: 12,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: "#444",
+    alignItems: "center",
+  },
+  emoji: { fontSize: 35, marginBottom: 5 },
+  itemTitle: { color: "#FFF", fontSize: 11, fontWeight: "bold" },
+  priceText: { color: "#AAA", fontSize: 10, marginVertical: 4 },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    borderRadius: 10,
+    marginVertical: 10,
+    padding: 2,
+  },
+  qtyBtn: {
+    width: 25,
+    height: 25,
+    backgroundColor: '#444',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  qtyBtnText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+  qtyNumber: {
+    color: '#FFD600',
+    paddingHorizontal: 12,
+    fontWeight: 'bold',
+    fontSize: 16
+  },
+  buyButton: { 
+    backgroundColor: "#4CAF50", 
+    paddingVertical: 8, 
+    borderRadius: 10,
+    width: '100%',
+    alignItems: 'center'
+  },
+  buyDisabled: { backgroundColor: "#888", opacity: 0.5 },
+  buyButtonText: { color: "#FFF", fontSize: 9, fontWeight: "bold" }
 });

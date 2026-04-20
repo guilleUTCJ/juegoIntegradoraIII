@@ -12,6 +12,7 @@ import StartScreen from "./app/screens/StartScreen";
 // Importamos las nuevas pantallas desarrolladas
 import BattleScreen from "./app/screens/BattleScreen";
 import BattleScreenScenario from "./app/screens/BattleScreenScenario";
+import InventoryScreen from "./app/screens/InventoryScreen";
 import PetScreen from "./app/screens/PetScreen";
 import ShopScreen from "./app/screens/ShopScreen";
 const Stack = createNativeStackNavigator();
@@ -65,6 +66,10 @@ export default function App() {
             component={BattleScreenScenario}
           />
 
+          <Stack.Screen
+            name="InventoryScreen"
+            component={InventoryScreen}
+          />
 
           <Stack.Screen
             name="Profile"
