@@ -1,4 +1,4 @@
-import * as ScreenOrientation from 'expo-screen-orientation';
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -63,7 +63,7 @@ export default function BattleScreenScenario({ route, navigation }: any) {
 
     useEffect(() => {
         petService.getPetData();
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
+   
     }, []);
 
     // 🎮 JOYSTICK

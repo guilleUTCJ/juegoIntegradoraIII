@@ -22,6 +22,7 @@ import { usePetActions } from '../hooks/usePetActions';
 import { auth } from "../services/firebase";
 import { multiplayerService } from '../services/multiplayerService';
 
+
 export default function HomeScreen({ navigation }: any) {
     const { playMusic } = useAudio();
     const { width, height } = useWindowDimensions();
@@ -46,21 +47,21 @@ export default function HomeScreen({ navigation }: any) {
         require('../assets/sprites/pet_1/idle/idle_home/1.png'),
     ];
     const handleFindMatch = async () => {
-    if (searching) return;
-    setSearching(true);
-    try {
-        const roomId = await multiplayerService.findMatch({
-            id: auth.currentUser?.uid || '',
-            email: auth.currentUser?.email || '',
-            level: petData?.level || 1,
-        });
-        navigation.navigate("BattleScreenScenario", { roomId });
-    } catch (e) {
-        alert("Error");
-    } finally {
-        setSearching(false);
-    }
-};
+        if (searching) return;
+        setSearching(true);
+        try {
+            const roomId = await multiplayerService.findMatch({
+                id: auth.currentUser?.uid || '',
+                email: auth.currentUser?.email || '',
+                level: petData?.level || 1,
+            });
+            navigation.navigate("BattleScreenScenario", { roomId });
+        } catch (e) {
+            alert("Error");
+        } finally {
+            setSearching(false);
+        }
+    };
     useEffect(() => {
         NavigationBar.setVisibilityAsync("hidden");
         NavigationBar.setBehaviorAsync("inset-touch");
@@ -157,7 +158,7 @@ export default function HomeScreen({ navigation }: any) {
                     </Pressable>
 
                     <View style={styles.currencyWrapper}>
-                        <StatBox value="1,250" icon="💰" color="#FFB300" />
+                        <StatBox value={petData?.gold} icon="💰" color="#FFB300" />
                     </View>
                 </View>
 
@@ -169,37 +170,48 @@ export default function HomeScreen({ navigation }: any) {
                 </View>
 
                 {/* ACCIONES */}
-                <View style={[styles.sidebarLeft, { left: insets.left + 15 }]}>
-                    <CareButton icon="🍎" color="#FF5252" onPress={feed} />
+                <View style={[styles.sidebarLeft,{ left: insets.left + 15, zIndex: 10, elevation: 10 }]}>
+                   
                     <CareButton icon="💤" color="#7C4DFF" onPress={sleep} />
                     <CareButton icon="🚿" color="#00B0FF" onPress={clean} />
+                    <CareButton icon="🎮" color="#ff4d4d" onPress={sleep} />
                 </View>
 
                 {/* MENÚ */}
-                <View style={[styles.sidebarRight, { right: insets.right + 15 }]}>
+                <View style={[styles.sidebarRight,{ right: insets.right + 15, zIndex: 10, elevation: 10 }]}>
                     <NavButton icon="🛒" label="TIENDA" onPress={() => navigation.navigate("ShopScreen")} />
-                    <NavButton icon="🐥" label="AVES" onPress={() => navigation.navigate("Pet")} />
+                        <Pressable
+                        style={styles.navBtn}
+                        onPress={() => navigation.navigate('InventoryScreen')}
+                    >
+                        <View style={styles.navIconContainer}>
+                            {/* Puedes cambiar este emoji por una imagen si lo prefieres */}
+                            <Text style={{ fontSize: 28 }}>🎒</Text>
+                        </View>
+                        <Text style={styles.navLabel}>Inventario</Text>
+                    </Pressable>
+
                 </View>
 
                 {/* PERSONAJE */}
                 <Animated.View style={[styles.charContainer]}>
-                        <SpriteAnimator frames={IDLE_FRAMES} fps={4} loop={true} />
+                    <SpriteAnimator frames={IDLE_FRAMES} fps={4} loop={true} />
                 </Animated.View>
 
                 {/* BOTÓN */}
                 <View style={[styles.footer, { marginBottom: insets.bottom + 20 }]}>
-                   <Pressable
-    onPress={handleFindMatch}
-    disabled={searching}
-    style={({ pressed }) => [
-        styles.playButton,
-        pressed && { transform: [{ scale: 0.95 }, { translateY: 4 }] }
-    ]}
->
-    <Text style={styles.playText}>
-        {searching ? "Buscando..." : "¡LUCHA!"}
-    </Text>
-</Pressable>
+                    <Pressable
+                        onPress={handleFindMatch}
+                        disabled={searching}
+                        style={({ pressed }) => [
+                            styles.playButton,
+                            pressed && { transform: [{ scale: 0.95 }, { translateY: 4 }] }
+                        ]}
+                    >
+                        <Text style={styles.playText}>
+                            {searching ? "Buscando..." : "¡LUCHA!"}
+                        </Text>
+                    </Pressable>
                 </View>
 
             </ImageBackground>

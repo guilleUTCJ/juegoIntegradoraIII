@@ -15,7 +15,7 @@ const H = Math.min(SCREEN.width, SCREEN.height);
 // ── Constantes de arena ───────────────────────────────────────
 const FLOOR_Y       = H - 30;
 const PLAYER_W      = 60;
-const PLAYER_H      = 100;
+const PLAYER_H      = 50;
 const SPAWN_Y       = FLOOR_Y - PLAYER_H / 2 - 2;
 const P1_SPAWN_X    = 180;
 const P2_SPAWN_X    = W - 180;
@@ -144,7 +144,7 @@ const setupWorld = (userId: string | undefined, room: any) => {
   (enemyBody as any).gravityScale = 0;
 
   // ── Suelo
-  const floor = Matter.Bodies.rectangle(W / 2, FLOOR_Y + 25, W + 40, 50, {
+  const floor = Matter.Bodies.rectangle(W / 2, FLOOR_Y + 25, W + 40, 500, {
     isStatic: true, label: 'Floor', friction: 0.9,
     collisionFilter: { category: CAT_WORLD, mask: CAT_PLAYER },
   });
@@ -173,6 +173,10 @@ const setupWorld = (userId: string | undefined, room: any) => {
       require('../../assets/sprites/pet_1/idle/idle_pelea/2.png'),
       require('../../assets/sprites/pet_1/idle/idle_pelea/3.png'),
       require('../../assets/sprites/pet_1/idle/idle_pelea/4.png'),
+      require('../../assets/sprites/pet_1/idle/idle_pelea/4.png'),
+      require('../../assets/sprites/pet_1/idle/idle_pelea/3.png'),
+      require('../../assets/sprites/pet_1/idle/idle_pelea/2.png'),
+     
     ],
     walk: [
       require('../../assets/sprites/pet_1/walk/1.png'),
@@ -188,10 +192,17 @@ const setupWorld = (userId: string | undefined, room: any) => {
       require('../../assets/sprites/pet_1/jump/2.png'),
       require('../../assets/sprites/pet_1/jump/3.png'),
     ],
-    attack: [
+    attack1: [
       require('../../assets/sprites/pet_1/fight/1.png'),
+    ],
+    attack2: [
       require('../../assets/sprites/pet_1/fight/2.png'),
+    ],
+    attack3: [
       require('../../assets/sprites/pet_1/fight/3.png'),
+    ],
+
+    attack4: [
       require('../../assets/sprites/pet_1/fight/4.png'),
     ],
     block: [
@@ -199,7 +210,8 @@ const setupWorld = (userId: string | undefined, room: any) => {
     ],
     hit: [
       require('../../assets/sprites/pet_1/hits/1.png'),
-      require('../../assets/sprites/pet_1/hits/2.png'),
+    ],
+    hit_block: [
       require('../../assets/sprites/pet_1/hits/3.png'),
     ],
     died: [

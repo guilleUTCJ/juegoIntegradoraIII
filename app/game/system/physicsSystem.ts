@@ -1,14 +1,21 @@
 import Matter from 'matter-js';
 import { multiplayerService } from '../../services/multiplayerService';
-import { FLOOR_Y, W } from '../engine/GameEngine';
 
 let lastBroadcast = 0;
 
-// Límites de la arena para clampar posiciones
-const MIN_X = 50;
-const MAX_X = W - 50;
-const MIN_Y = 20;
-const MAX_Y = FLOOR_Y - 10;   // justo encima del suelo
+// These should match GameEngine.tsx arena constants as closely as possible.
+// W/H here are used only for clamping — the actual physics floor is set in GameEngine.
+// Landscape: W = long side, H = short side
+import { Dimensions } from 'react-native';
+const SCREEN = Dimensions.get('window');
+const W = Math.max(SCREEN.width, SCREEN.height);
+const H = Math.min(SCREEN.width, SCREEN.height);
+
+const FLOOR_Y = H - 30;       // must match GameEngine.tsx FLOOR_Y
+const MIN_X   = 50;
+const MAX_X   = W - 50;
+const MIN_Y   = 20;
+const MAX_Y   = FLOOR_Y - 50; // clamped just above ground
 
 export const PhysicsSystem = (entities: any, { time, joystick, userId, room }: any) => {
   if (!room || !userId || !room.player1 || !room.id) return entities;
@@ -25,29 +32,23 @@ export const PhysicsSystem = (entities: any, { time, joystick, userId, room }: a
 
   const body = myPlayer.body;
 
-  // ─────────────────────────────────────────
-  // 1. MOVIMIENTO HORIZONTAL del jugador local
-  // ─────────────────────────────────────────
+  // ── 1. Horizontal movement ───────────────────────────────
   const moveX = joystick?.x ?? 0;
 
   Matter.Body.setVelocity(body, {
     x: moveX * 7,
-    y: body.velocity.y,   // preservar velocidad vertical (gravedad/salto)
+    y: body.velocity.y,
   });
 
-  // Estado y dirección
   if (Math.abs(moveX) > 0.1) {
-    myPlayer.state    = 'walk';
-    body.facing       = moveX > 0 ? 'right' : 'left';
-  } else if (!['jump', 'attack', 'hit', 'block'].includes(myPlayer.state)) {
+    myPlayer.state = 'walk';
+    body.facing    = moveX > 0 ? 'right' : 'left';
+  } else if (!['jump', 'attack1', 'attack2', 'attack3', 'attack4', 'hit', 'block'].includes(myPlayer.state)) {
     myPlayer.state = 'idle';
   }
 
-  // ─────────────────────────────────────────
-  // 2. SALTO — joystick Y negativo
-  //    isOnGround: velocidad vertical casi cero Y cerca del suelo
-  // ─────────────────────────────────────────
-  const nearFloor = body.position.y >= FLOOR_Y - 80;
+  // ── 2. Jump ──────────────────────────────────────────────
+  const nearFloor  = body.position.y >= FLOOR_Y - 80;
   const isOnGround = nearFloor && Math.abs(body.velocity.y) < 1.5;
 
   if (joystick?.y < -0.5 && isOnGround) {
@@ -55,29 +56,20 @@ export const PhysicsSystem = (entities: any, { time, joystick, userId, room }: a
     myPlayer.state = 'jump';
   }
 
-  // Volver a idle al aterrizar
   if (myPlayer.state === 'jump' && isOnGround && body.velocity.y >= 0) {
     myPlayer.state = 'idle';
   }
 
-  // ─────────────────────────────────────────
-  // 3. NEUTRALIZAR gravedad del cuerpo enemigo
-  //    (para versiones de Matter que no respetan gravityScale en options)
-  // ─────────────────────────────────────────
+  // ── 3. Neutralize enemy gravity ──────────────────────────
   if (enemyPlayer?.body) {
     Matter.Body.setVelocity(enemyPlayer.body, { x: 0, y: 0 });
   }
 
-  // ─────────────────────────────────────────
-  // 4. ACTUALIZAR MOTOR FÍSICO
-  // ─────────────────────────────────────────
+  // ── 4. Step physics ──────────────────────────────────────
   Matter.Engine.update(engine, time.delta);
 
-  // ─────────────────────────────────────────
-  // 5. CLAMPAR posición del jugador local
-  //    (por si se escapa de los bounds antes de que las paredes respondan)
-  // ─────────────────────────────────────────
-  const pos = body.position;
+  // ── 5. Clamp local player ────────────────────────────────
+  const pos      = body.position;
   const clampedX = Math.max(MIN_X, Math.min(MAX_X, pos.x));
   const clampedY = Math.max(MIN_Y, Math.min(MAX_Y, pos.y));
   if (clampedX !== pos.x || clampedY !== pos.y) {
@@ -87,9 +79,7 @@ export const PhysicsSystem = (entities: any, { time, joystick, userId, room }: a
     }
   }
 
-  // ─────────────────────────────────────────
-  // 6. BROADCAST → Firebase (cada 50 ms)
-  // ─────────────────────────────────────────
+  // ── 6. Broadcast to Firebase every 50ms ──────────────────
   const now = Date.now();
   if (now - lastBroadcast > 50) {
     lastBroadcast = now;
@@ -102,17 +92,13 @@ export const PhysicsSystem = (entities: any, { time, joystick, userId, room }: a
     });
   }
 
-  // ─────────────────────────────────────────
-  // 7. SINCRONIZAR ENEMIGO desde Firebase
-  //    setPosition directamente (sin acumulación de velocidad)
-  // ─────────────────────────────────────────
+  // ── 7. Sync enemy from Firebase ──────────────────────────
   const enemyData = isP1 ? room.player2 : room.player1;
 
   if (enemyData && enemyPlayer?.body) {
     const { posX, posY, facing, action } = enemyData;
 
     if (posX !== undefined && posY !== undefined) {
-      // Interpolación suave en X e Y para movimiento fluido
       const cx = enemyPlayer.body.position.x;
       const cy = enemyPlayer.body.position.y;
 
@@ -124,12 +110,10 @@ export const PhysicsSystem = (entities: any, { time, joystick, userId, room }: a
         y: cy + (targetY - cy) * 0.35,
       });
 
-      // Resetear velocidad post-setPosition para evitar drift
       Matter.Body.setVelocity(enemyPlayer.body, { x: 0, y: 0 });
     }
 
-    enemyPlayer.body.facing = facing ?? (isP1 ? 'left' : 'right');
-    // networkState evita que AnimationSystem lo sobreescriba
+    enemyPlayer.body.facing  = facing ?? (isP1 ? 'left' : 'right');
     enemyPlayer.networkState = action ?? 'idle';
   }
 
