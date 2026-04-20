@@ -1,7 +1,7 @@
 import * as NavigationBar from 'expo-navigation-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Animated,
@@ -14,21 +14,53 @@ import {
     View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SpriteAnimator } from '../components/SpriteAnimator';
 import { useAudio } from '../hooks/AudioContext';
 import { useFloatingAnimation } from '../hooks/useFloatingAnimation';
 import { usePet } from '../hooks/usePet';
 import { usePetActions } from '../hooks/usePetActions';
 import { auth } from "../services/firebase";
+import { multiplayerService } from '../services/multiplayerService';
 
 export default function HomeScreen({ navigation }: any) {
     const { playMusic } = useAudio();
     const { width, height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
+    const [searching, setSearching] = useState(false);
 
     const { petData, loading } = usePet();
     const { feed, sleep, clean } = usePetActions();
     const floatAnim = useFloatingAnimation();
-
+    const IDLE_FRAMES = [
+        require('../assets/sprites/pet_1/idle/idle_home/1.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/2.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/2.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/3.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/3.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/4.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/4.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/3.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/3.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/2.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/2.png'),
+        require('../assets/sprites/pet_1/idle/idle_home/1.png'),
+    ];
+    const handleFindMatch = async () => {
+    if (searching) return;
+    setSearching(true);
+    try {
+        const roomId = await multiplayerService.findMatch({
+            id: auth.currentUser?.uid || '',
+            email: auth.currentUser?.email || '',
+            level: petData?.level || 1,
+        });
+        navigation.navigate("BattleScreenScenario", { roomId });
+    } catch (e) {
+        alert("Error");
+    } finally {
+        setSearching(false);
+    }
+};
     useEffect(() => {
         NavigationBar.setVisibilityAsync("hidden");
         NavigationBar.setBehaviorAsync("inset-touch");
@@ -150,25 +182,24 @@ export default function HomeScreen({ navigation }: any) {
                 </View>
 
                 {/* PERSONAJE */}
-                <Animated.View style={[styles.charContainer, { transform: [{ translateY: floatAnim }] }]}>
-                    <Image
-                        source={require('../assets/images/main_item.png')}
-                        style={{ width: width * 0.5, height: height * 0.6 }}
-                        resizeMode="contain"
-                    />
+                <Animated.View style={[styles.charContainer]}>
+                        <SpriteAnimator frames={IDLE_FRAMES} fps={4} loop={true} />
                 </Animated.View>
 
                 {/* BOTÓN */}
                 <View style={[styles.footer, { marginBottom: insets.bottom + 20 }]}>
-                    <Pressable
-                        onPress={() => navigation.navigate("BattleScreen")}
-                        style={({ pressed }) => [
-                            styles.playButton,
-                            pressed && { transform: [{ scale: 0.95 }, { translateY: 4 }] }
-                        ]}
-                    >
-                        <Text style={styles.playText}>¡LUCHA!</Text>
-                    </Pressable>
+                   <Pressable
+    onPress={handleFindMatch}
+    disabled={searching}
+    style={({ pressed }) => [
+        styles.playButton,
+        pressed && { transform: [{ scale: 0.95 }, { translateY: 4 }] }
+    ]}
+>
+    <Text style={styles.playText}>
+        {searching ? "Buscando..." : "¡LUCHA!"}
+    </Text>
+</Pressable>
                 </View>
 
             </ImageBackground>

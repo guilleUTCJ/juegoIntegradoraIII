@@ -13,7 +13,6 @@ import StartScreen from "./app/screens/StartScreen";
 import BattleScreen from "./app/screens/BattleScreen";
 import BattleScreenScenario from "./app/screens/BattleScreenScenario";
 import InventoryScreen from "./app/screens/InventoryScreen";
-import PetScreen from "./app/screens/PetScreen";
 import ShopScreen from "./app/screens/ShopScreen";
 const Stack = createNativeStackNavigator();
 
@@ -50,10 +49,7 @@ export default function App() {
           />
 
           {/* Nueva ruta para el cuidado de la mascota */}
-          <Stack.Screen
-            name="Pet"
-            component={PetScreen}
-          />
+
 
           {/* Nueva ruta para el combate PvP */}
           <Stack.Screen
