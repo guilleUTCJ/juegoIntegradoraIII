@@ -1,43 +1,30 @@
-// app/game/system/combatSystem.ts
-import Matter from 'matter-js';
+// app/game/system/battleSystem.ts
 
-export const BattleSystem = (entities: any, { actions }: any) => {
-  const player1 = entities.player1;
-  const player2 = entities.player2;
+export const BattleSystem = (entities: any, { actions, userId, room }: any) => {
+  if (!actions || !room) return entities;
 
-  if (!actions) return entities;
+  const isP1     = room?.player1?.id === userId;
+  const myKey    = isP1 ? 'player1' : 'player2';
+  const myPlayer = entities[myKey];
 
-  // 🎮 PLAYER 1
-  if (actions.p1) {
-    if (actions.p1.attack) {
-      player1.state = 'attack';
+  if (!myPlayer) return entities;
 
-      // 💥 empujar enemigo
-      Matter.Body.setVelocity(player2.body, {
-        x: 5,
-        y: -2,
-      });
-    }
+  const myActions = isP1 ? actions.p1 : actions.p2;
+  if (!myActions) return entities;
 
-    if (actions.p1.block) {
-      player1.state = 'block';
-    }
+  // ── Solo actualizamos el estado VISUAL del jugador local.
+  //    El daño real (HP) lo gestiona battleService.performAttack() → Firebase.
+  //    El estado del enemigo llega vía room.playerX.action → networkState.
+  //
+  // ⚠️ NO llamamos a Matter.Body.setVelocity() sobre el enemigo aquí.
+  //    Hacerlo desincroniza la posición local respecto a Firebase.
+
+  if (myActions.attack && !['attack', 'hit'].includes(myPlayer.state)) {
+    myPlayer.state = 'attack';
   }
 
-  // 🎮 PLAYER 2
-  if (actions.p2) {
-    if (actions.p2.attack) {
-      player2.state = 'attack';
-
-      Matter.Body.setVelocity(player1.body, {
-        x: -5,
-        y: -2,
-      });
-    }
-
-    if (actions.p2.block) {
-      player2.state = 'block';
-    }
+  if (myActions.block && !['attack', 'hit'].includes(myPlayer.state)) {
+    myPlayer.state = 'block';
   }
 
   return entities;
