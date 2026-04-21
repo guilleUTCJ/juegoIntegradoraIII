@@ -70,12 +70,6 @@ export default function ProfileScreen({ navigation }: any) {
                         </View>
                     </View>
 
-                    {/* --- ACCIONES DE CUENTA --- */}
-                    <View style={styles.actionsContainer}>
-                        <MenuOption icon="⚙️" label="AJUSTES DEL JUEGO" color="#4A90E2" />
-                        <MenuOption icon="🛡️" label="PRIVACIDAD" color="#50E3C2" />
-                    </View>
-
                     {/* --- BOTÓN DE LOGOUT (MÁXIMO IMPACTO) --- */}
                     <Pressable
                         style={({ pressed }) => [

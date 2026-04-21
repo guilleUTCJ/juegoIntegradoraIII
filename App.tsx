@@ -10,8 +10,10 @@ import SplashScreen from "./app/screens/SplashScreen";
 import StartScreen from "./app/screens/StartScreen";
 
 // Importamos las nuevas pantallas desarrolladas
+import BathroomScreen from "./app/screens/BathroomScreen";
 import BattleScreen from "./app/screens/BattleScreen";
 import BattleScreenScenario from "./app/screens/BattleScreenScenario";
+import BedroomScreen from "./app/screens/BedroomScreen";
 import InventoryScreen from "./app/screens/InventoryScreen";
 import ShopScreen from "./app/screens/ShopScreen";
 const Stack = createNativeStackNavigator();
@@ -39,6 +41,11 @@ export default function App() {
           />
 
           <Stack.Screen
+            name="BedroomScreen"
+            component={BedroomScreen}
+          />
+
+          <Stack.Screen
             name="Home"
             component={HomeScreen}
           />
@@ -50,7 +57,10 @@ export default function App() {
 
           {/* Nueva ruta para el cuidado de la mascota */}
 
-
+          <Stack.Screen
+            name="BathroomScreen"
+            component={BathroomScreen}
+          />
           {/* Nueva ruta para el combate PvP */}
           <Stack.Screen
             name="BattleScreen"
