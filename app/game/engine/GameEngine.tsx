@@ -13,7 +13,7 @@ const W = Math.max(SCREEN.width, SCREEN.height);
 const H = Math.min(SCREEN.width, SCREEN.height);
 
 // ── Constantes de arena ───────────────────────────────────────
-const FLOOR_Y       = H - 30;
+const FLOOR_Y       = H - 1;
 const PLAYER_W      = 60;
 const PLAYER_H      = 50;
 const SPAWN_Y       = FLOOR_Y - PLAYER_H / 2 - 2;

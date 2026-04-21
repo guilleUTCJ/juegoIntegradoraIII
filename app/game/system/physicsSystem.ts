@@ -11,7 +11,7 @@ const SCREEN = Dimensions.get('window');
 const W = Math.max(SCREEN.width, SCREEN.height);
 const H = Math.min(SCREEN.width, SCREEN.height);
 
-const FLOOR_Y = H - 30;       // must match GameEngine.tsx FLOOR_Y
+const FLOOR_Y = H - 0.00000001;       // must match GameEngine.tsx FLOOR_Y
 const MIN_X   = 50;
 const MAX_X   = W - 50;
 const MIN_Y   = 20;

@@ -179,7 +179,7 @@ export default function HomeScreen({ navigation }: any) {
                         icon="🍱" 
                         color="#4CAF50" 
                         disabled={isSleeping} 
-                        onPress={() => navigation.navigate('InventoryScreen')} 
+                        onPress={() => navigation.navigate('KitchenScreen')} 
                     />
                 </View>
 

@@ -15,6 +15,7 @@ import BattleScreen from "./app/screens/BattleScreen";
 import BattleScreenScenario from "./app/screens/BattleScreenScenario";
 import BedroomScreen from "./app/screens/BedroomScreen";
 import InventoryScreen from "./app/screens/InventoryScreen";
+import KitchenScreen from "./app/screens/KitchenScreen";
 import ShopScreen from "./app/screens/ShopScreen";
 const Stack = createNativeStackNavigator();
 
@@ -75,6 +76,11 @@ export default function App() {
           <Stack.Screen
             name="InventoryScreen"
             component={InventoryScreen}
+          />
+
+          <Stack.Screen
+            name="KitchenScreen"
+            component={KitchenScreen}
           />
 
           <Stack.Screen

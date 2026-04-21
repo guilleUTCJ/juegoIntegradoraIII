@@ -134,7 +134,7 @@ export default function BedroomScreen({ navigation }: any) {
                             source={
                                 isSleeping 
                                 ? require("../assets/sprites/pet_1/idle/idle_home/4.png") // <--- TU idle_2.png AQUÍ (ojos cerrados)
-                                : require("../assets/sprites/pet_1/idle/idle_home/1.png") // <--- Sprite normal (ojos abiertos)
+                                : require("../assets/sprites/0.png") // <--- Sprite normal (ojos abiertos)
                             }
                             style={styles.petImage}
                             resizeMode="contain"

@@ -22,17 +22,17 @@ const { width: SW, height: SH } = Dimensions.get('window');
 
 // ─── Combo label map ─────────────────────────────────────────
 const COMBO_LABELS: Record<number, string> = {
-  0: 'JAB',
-  1: 'CROSS',
-  2: 'HOOK',
-  3: 'UPPERCUT',
+    0: 'JAB',
+    1: 'CROSS',
+    2: 'HOOK',
+    3: 'UPPERCUT',
 };
 
 const COMBO_COLORS: Record<number, string> = {
-  0: '#facc15',
-  1: '#fb923c',
-  2: '#f87171',
-  3: '#c084fc',
+    0: '#facc15',
+    1: '#fb923c',
+    2: '#f87171',
+    3: '#c084fc',
 };
 
 // ─── HP bar sub-component ─────────────────────────────────────
@@ -224,18 +224,34 @@ export default function BattleScreenScenario({ route, navigation }: any) {
     const handleAttack = useCallback(async () => {
         if (!room || room.status !== 'playing' || isAttacking) return;
 
+        // 1. Cálculo de proximidad
+        // Obtenemos las posiciones X de ambos jugadores desde el estado de la sala
+        const myPosX = isP1 ? room.player1?.posX : room.player2?.posX;
+        const enemyPosX = isP1 ? room.player2?.posX : room.player1?.posX;
+
+        // Calculamos la distancia absoluta
+        const distance = Math.abs((myPosX ?? 0) - (enemyPosX ?? 0));
+
+        // Definimos un rango de ataque (ejemplo: 70 unidades)
+        const ATTACK_RANGE = 70;
+        const isCloseEnough = distance <= ATTACK_RANGE;
+
+        // 2. Verificación de bloqueo del enemigo
+        // Obtenemos si el enemigo tiene activado el estado de bloqueo
+        const enemyIsBlocking = isP1 ? room.player2?.action === 'block' : room.player1?.action === 'block';
+
         setIsAttacking(true);
 
         const currentStep = comboStepRef.current;
         const nextStep = (currentStep + 1) % 4;
         comboStepRef.current = nextStep;
         setComboStep(nextStep);
-        setComboFlashTrigger(Date.now()); // triggers ComboFlash
+        setComboFlashTrigger(Date.now());
 
-        const attackAction = `attack${currentStep + 1}`; // attack1..4
+        const attackAction = `attack${currentStep + 1}`;
         const key = isP1 ? 'p1' : 'p2';
 
-        // Set visual state locally
+        // Set visual state locally (la animación ocurre siempre, aunque no conecte el golpe)
         setActions(prev => ({
             ...prev,
             [key]: { ...prev[key], attackAction },
@@ -247,14 +263,18 @@ export default function BattleScreenScenario({ route, navigation }: any) {
             Animated.spring(attackPulse, { toValue: 1, useNativeDriver: true }),
         ]).start();
 
-        // Perform actual attack (damage + Firebase)
-        if (roomId) {
+        // 3. Ejecutar el ataque real solo si cumple las condiciones
+        // Solo quitamos vida si están cerca Y el enemigo NO está bloqueando
+        if (roomId && isCloseEnough && !enemyIsBlocking) {
             await battleService.performAttack(
                 roomId,
                 isP1,
                 enemySafe ?? undefined,
                 meSafe?.level ?? 1,
             );
+        } else if (enemyIsBlocking && isCloseEnough) {
+            console.log("Ataque bloqueado");
+            handleBlock;
         }
 
         // Clear local attack state after animation window
